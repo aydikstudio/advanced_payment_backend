@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  name     String?
+  password String
+  role     Role    @default(USER)
+
+  isAutoRenewal       Boolean   @default(true)
+  subscriptionEndDate DateTime?
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  paymentId     String  @unique @map("payment_id")
+  paymentMethod String? @map("payment_method")
+
+  months Int
+  amount String
+
+  status TransactionStatus
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  @map("user_id")
+
+  @@map("transaction")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TransactionStatus {
+  pending
+  waiting_for_capture
+  succeeded
+  canceled
+  refunded
+}
